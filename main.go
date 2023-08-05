@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"modulo-go-project/database"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
-
-	"modulo-go-project/database"
 )
 
 func main() {
@@ -27,16 +26,17 @@ func main() {
 	}
 
 	router := mux.NewRouter()
-
 	router.HandleFunc("/game/{id}", handleGetGameByID)
 	router.HandleFunc("/games", handleAllGames)
 	router.HandleFunc("/description/gameId/{id}", handleGetDescriptionByIDgame)
+	router.HandleFunc("/gamelist/{id}", handleGetGamelistByID)
 
 	port := ":8080"
 	fmt.Printf("Servidor rodando em http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
 
 }
+
 func handleAllGames(w http.ResponseWriter, r *http.Request) {
 	games, err := database.GetAllGames()
 	if err != nil {
@@ -46,6 +46,29 @@ func handleAllGames(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(games)
+
+}
+
+func handleGetGamelistByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idGameList := vars["id"]
+
+	id, err := strconv.Atoi(idGameList)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+	gamelist, err := database.GetGameListByID(id)
+	if err != nil {
+		if err == database.ErrNoRows {
+			http.Error(w, "Game list not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(gamelist)
 
 }
 
@@ -92,6 +115,6 @@ func handleGetDescriptionByIDgame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json") // Corrigido: "Content-Type" em vez de "Content-Typer"
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(gameList)
 }
