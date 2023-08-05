@@ -13,8 +13,8 @@ func CreateGame(game models.Game) error {
 	}
 	defer CloseDB(db)
 
-	query := "INSERT INTO Game (Titulo, Ano, Genero, GameList) VALUES(?, ?, ?, ?)"
-	_, err = db.Exec(query, game.Titulo, game.Ano, game.Genero, game.GameList)
+	query := "INSERT INTO Game (Titulo, Ano, Genero, gamelist) VALUES(?, ?, ?, ?)"
+	_, err = db.Exec(query, game.Titulo, game.Ano, game.Genero, game.Gamelist)
 	if err != nil {
 		return err
 	}
@@ -30,13 +30,42 @@ func GetGameByID(id int) (models.Game, error) {
 
 	var game models.Game
 
-	query := "SELECT id, Titulo, Ano, Genero, gamelist FROM Game WHERE id = 14?"
+	query := "SELECT idgame, Titulo, Ano, Genero, gamelist FROM Game WHERE idgame = ?"
 
-	err = db.QueryRow(query, id).Scan(&game.ID, &game.Titulo, &game.Ano, &game.Genero, &game.GameList)
+	err = db.QueryRow(query, id).Scan(&game.Idgame, &game.Titulo, &game.Ano, &game.Genero, &game.Gamelist)
 	if err == sql.ErrNoRows {
 
 		return game, err
 
 	}
 	return game, nil
+}
+
+func GetAllGames() ([]models.Game, error) {
+	db, err := OpenDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer CloseDB(db)
+
+	var games []models.Game
+
+	query := "SELECT idgame, Titulo, Ano, Genero, gamelist FROM Game"
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var game models.Game
+		err := rows.Scan(&game.Idgame, &game.Titulo, &game.Ano, &game.Genero, &game.Gamelist)
+		if err != nil {
+			return nil, err
+		}
+		games = append(games, game)
+	}
+
+	return games, nil
 }
