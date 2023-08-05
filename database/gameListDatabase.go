@@ -6,21 +6,7 @@ import (
 	"modulo-go-project/models"
 )
 
-func CreateGameList(gameList models.GameList) error {
-	db, err := OpenDB()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer CloseDB(db)
-	query := "INSERT INTO Gamelist (Descricao) VALUES(?)"
-	_, err = db.Exec(query, gameList.Descricao)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func GetGameListbyID(id int) (models.GameList, error) {
+func GetDescriptionListByGameID(id int) (models.GameList, error) {
 	db, err := OpenDB()
 	if err != nil {
 		log.Fatal(err)
@@ -29,12 +15,18 @@ func GetGameListbyID(id int) (models.GameList, error) {
 
 	var gamelist models.GameList
 
-	query := "SELECT Gamelist.ID, Gamelist.Descricao FROM Gamelist WHERE ID = ?"
-	err = db.QueryRow(query, id).Scan(&gamelist.ID, &gamelist.Descricao)
+	query := `SELECT gamelist.id, gamelist.descricao
+	FROM game
+	INNER JOIN gamelist ON
+	game.gamelist = gamelist.id
+	WHERE game.idgame = ?;
+	
+	`
+
+	err = db.QueryRow(query, id).Scan(&gamelist.Id, &gamelist.Descricao)
+
 	if err == sql.ErrNoRows {
-
 		return gamelist, err
-
 	}
 	return gamelist, nil
 }
