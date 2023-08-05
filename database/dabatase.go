@@ -9,16 +9,18 @@ import (
 
 const (
 	DBUser     = "root"
-	DBPassword = "gowebprojectdb"
-	DBName     = "admin"
+	DBPassword = "admin"
+	DBName     = "gowebprojectdb"
+	DBPort     = "3306" // A porta do MySQL
 )
 
 func OpenDB() (*sql.DB, error) {
-	connectionString := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s", DBUser, DBPassword, DBName)
+	connectionString := fmt.Sprintf("%s:%s@tcp(localhost:%s)/%s", DBUser, DBPassword, DBPort, DBName)
 	db, err := sql.Open("mysql", connectionString)
 
 	if err != nil {
-		return nil, err
+		fmt.Println("Error validating sql.Open arguments")
+		panic(err.Error())
 	}
 	return db, nil
 }

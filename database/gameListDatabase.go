@@ -12,7 +12,7 @@ func CreateGameList(gameList models.GameList) error {
 		log.Fatal(err)
 	}
 	defer CloseDB(db)
-	query := "INSERT INTO gamelist (descricao) VALUES(?)"
+	query := "INSERT INTO Gamelist (Descricao) VALUES(?)"
 	_, err = db.Exec(query, gameList.Descricao)
 	if err != nil {
 		return err
@@ -29,7 +29,7 @@ func GetGameListbyID(id int) (models.GameList, error) {
 
 	var gamelist models.GameList
 
-	query := "SELECT gamelist.id, gamelist.descricao FROM gamelist WHERE id = ?"
+	query := "SELECT Gamelist.ID, Gamelist.Descricao FROM Gamelist WHERE ID = ?"
 	err = db.QueryRow(query, id).Scan(&gamelist.ID, &gamelist.Descricao)
 	if err == sql.ErrNoRows {
 

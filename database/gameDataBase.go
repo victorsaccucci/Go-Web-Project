@@ -13,7 +13,7 @@ func CreateGame(game models.Game) error {
 	}
 	defer CloseDB(db)
 
-	query := "INSERT INTO Game (Titulo, Ano, Genero, gamelist) VALUES(?, ?, ?, ?)"
+	query := "INSERT INTO Game (Titulo, Ano, Genero, GameList) VALUES(?, ?, ?, ?)"
 	_, err = db.Exec(query, game.Titulo, game.Ano, game.Genero, game.GameList)
 	if err != nil {
 		return err
@@ -29,7 +29,9 @@ func GetGameByID(id int) (models.Game, error) {
 	defer CloseDB(db)
 
 	var game models.Game
-	query := "SELECT game.idgame, game.titulo, game.ano, game.genero, game.gamelist FROM Game WHERE idgame = ?"
+
+	query := "SELECT id, Titulo, Ano, Genero, gamelist FROM Game WHERE id = 14?"
+
 	err = db.QueryRow(query, id).Scan(&game.ID, &game.Titulo, &game.Ano, &game.Genero, &game.GameList)
 	if err == sql.ErrNoRows {
 
