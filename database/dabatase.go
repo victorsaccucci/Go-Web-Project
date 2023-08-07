@@ -14,7 +14,7 @@ const (
 	DBUser     = "root"
 	DBPassword = "admin"
 	DBName     = "gowebprojectdb"
-	DBPort     = "3306" // A porta do MySQL
+	DBPort     = "3306"
 )
 
 func OpenDB() (*sql.DB, error) {
