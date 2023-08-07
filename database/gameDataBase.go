@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"modulo-go-project/models"
 )
@@ -13,11 +14,21 @@ func CreateGame(game models.Game) error {
 	}
 	defer CloseDB(db)
 
-	query := "INSERT INTO Game (Titulo, Ano, Genero, gamelist) VALUES(?, ?, ?, ?)"
-	_, err = db.Exec(query, game.Titulo, game.Ano, game.Genero, game.Gamelist)
+	query := "INSERT INTO Game (Titulo, Ano, Genero, gamelist) VALUES (?, ?, ?, ?)"
+	result, err := db.Exec(query, game.Titulo, game.Ano, game.Genero, game.Gamelist)
 	if err != nil {
 		return err
 	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected != 1 {
+		return fmt.Errorf("failed to insert a new game")
+	}
+
 	return nil
 }
 
@@ -66,6 +77,5 @@ func GetAllGames() ([]models.Game, error) {
 		}
 		games = append(games, game)
 	}
-
 	return games, nil
 }

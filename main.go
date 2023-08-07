@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"modulo-go-project/database"
+	"modulo-go-project/models"
 	"net/http"
 	"strconv"
 
@@ -26,10 +27,17 @@ func main() {
 	}
 
 	router := mux.NewRouter()
-	router.HandleFunc("/game/{id}", handleGetGameByID)
-	router.HandleFunc("/games", handleAllGames)
-	router.HandleFunc("/description/gameId/{id}", handleGetDescriptionByIDgame)
-	router.HandleFunc("/gamelist/{id}", handleGetGamelistByID)
+
+	//Game (GET)
+	router.HandleFunc("/game/{id}", handleGetGameByID).Methods("GET")
+	router.HandleFunc("/games", handleAllGames).Methods("GET")
+
+	//Game (POST)
+	router.HandleFunc("/insert", handleCreateGame).Methods("POST")
+
+	//Gamelist(GameList GET)
+	router.HandleFunc("/description/gameId/{id}", handleGetDescriptionByIDgame).Methods("GET")
+	router.HandleFunc("/gamelist/{id}", handleGetGamelistByID).Methods("GET")
 
 	port := ":8080"
 	fmt.Printf("Servidor rodando em http://localhost%s\n", port)
@@ -37,40 +45,7 @@ func main() {
 
 }
 
-func handleAllGames(w http.ResponseWriter, r *http.Request) {
-	games, err := database.GetAllGames()
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(games)
-
-}
-
-func handleGetGamelistByID(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idGameList := vars["id"]
-
-	id, err := strconv.Atoi(idGameList)
-	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
-		return
-	}
-	gamelist, err := database.GetGameListByID(id)
-	if err != nil {
-		if err == database.ErrNoRows {
-			http.Error(w, "Game list not found", http.StatusNotFound)
-		} else {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(gamelist)
-
-}
+//Game
 
 func handleGetGameByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -95,6 +70,63 @@ func handleGetGameByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(game)
 }
+
+func handleAllGames(w http.ResponseWriter, r *http.Request) {
+	games, err := database.GetAllGames()
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(games)
+
+}
+
+func handleCreateGame(w http.ResponseWriter, r *http.Request) {
+	var game models.Game
+
+	err := json.NewDecoder(r.Body).Decode(&game)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	err = database.CreateGame(game)
+	if err != nil {
+		http.Error(w, "Failed to create game", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("Game created successfully"))
+}
+
+//GameList
+
+func handleGetGamelistByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idGameList := vars["id"]
+
+	id, err := strconv.Atoi(idGameList)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+	gamelist, err := database.GetGameListByID(id)
+	if err != nil {
+		if err == database.ErrNoRows {
+			http.Error(w, "Game list not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(gamelist)
+
+}
+
 func handleGetDescriptionByIDgame(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idGame := vars["id"]
