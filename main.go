@@ -28,12 +28,13 @@ func main() {
 
 	router := mux.NewRouter()
 
-	//Game (GET)
+	//Game
 	router.HandleFunc("/game/{id}", handleGetGameByID).Methods("GET")
 	router.HandleFunc("/games", handleAllGames).Methods("GET")
-
-	//Game (POST)
 	router.HandleFunc("/insert", handleCreateGame).Methods("POST")
+	router.HandleFunc("/delete/{id}", handleDeleteGame).Methods(http.MethodDelete)
+
+	router.HandleFunc("/create", handleNewGame).Methods(http.MethodPost)
 
 	//Gamelist(GameList GET)
 	router.HandleFunc("/description/gameId/{id}", handleGetDescriptionByIDgame).Methods("GET")
@@ -46,6 +47,54 @@ func main() {
 }
 
 //Game
+
+func handleNewGame(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == http.MethodPost {
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, "Erro ao analisar o formulário", http.StatusInternalServerError)
+			return
+		}
+
+		titulo := r.FormValue("titulo")
+		anoStr := r.FormValue("ano")
+		genero := r.FormValue("genero")
+		gamelistStr := r.FormValue("gamelist")
+		ano, err := strconv.Atoi(anoStr)
+
+		if err != nil {
+			http.Error(w, "Ano inválido", http.StatusBadRequest)
+			return
+		}
+
+		gamelist, err := strconv.Atoi(gamelistStr)
+		if err != nil {
+			http.Error(w, "Gamelist inválido", http.StatusBadRequest)
+			return
+		}
+
+		newGame := models.Game{
+			Titulo:   titulo,
+			Ano:      ano,
+			Genero:   genero,
+			Gamelist: gamelist,
+		}
+
+		err = database.CreateGame(newGame)
+		if err != nil {
+			http.Error(w, "Erro ao inserir o jogo no banco de dados", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Jogo cadastrado com sucesso"))
+
+	} else {
+
+		http.Error(w, "Método não suportado", http.StatusMethodNotAllowed)
+	}
+}
 
 func handleGetGameByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -100,6 +149,28 @@ func handleCreateGame(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Game created successfully"))
+}
+
+func handleDeleteGame(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodDelete {
+		vars := mux.Vars(r)
+		idGame := vars["id"]
+
+		id, err := strconv.Atoi(idGame)
+		if err != nil {
+			http.Error(w, "Invalid ID", http.StatusBadRequest)
+			return
+		}
+		err = database.DeleteGame(id)
+		if err != nil {
+			http.Error(w, "Failed to delete game", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Game deleted succesfully"))
+	} else {
+		http.Error(w, "Method not suported", http.StatusMethodNotAllowed)
+	}
 }
 
 //GameList

@@ -31,7 +31,6 @@ func CreateGame(game models.Game) error {
 
 	return nil
 }
-
 func GetGameByID(id int) (models.Game, error) {
 	db, err := OpenDB()
 	if err != nil {
@@ -78,4 +77,19 @@ func GetAllGames() ([]models.Game, error) {
 		games = append(games, game)
 	}
 	return games, nil
+}
+
+func DeleteGame(id int) error {
+	db, err := OpenDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer CloseDB(db)
+
+	query := "DELETE FROM game WHERE idgame = ?"
+	_, err = db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
